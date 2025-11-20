@@ -1,6 +1,7 @@
 package com.sajjady.flattening.feature.parcelable
 
 import android.os.Parcel
+import android.os.Parcelable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -88,9 +89,10 @@ private fun ParcelizeBasicsDemo() {
 }
 
 @Suppress("UNCHECKED_CAST")
-private fun <T> parcelableCreator(): android.os.Parcelable.Creator<T> {
-    // Small helper for generic creator; in real apps use the generated CREATOR
-    return PUser.CREATOR as android.os.Parcelable.Creator<T>
+private inline fun <reified T : Parcelable> parcelableCreator(): Parcelable.Creator<T> {
+    // Reflectively access the generated CREATOR to avoid direct references in Kotlin 2.0+
+    val field = T::class.java.getDeclaredField("CREATOR")
+    return field.get(null) as Parcelable.Creator<T>
 }
 
 @Composable
@@ -116,7 +118,7 @@ private fun ParcelizeNestedDemo() {
                 val parcel = Parcel.obtain()
                 order.writeToParcel(parcel, 0)
                 parcel.setDataPosition(0)
-                val restored = POrder.CREATOR.createFromParcel(parcel)
+                val restored = parcelableCreator<POrder>().createFromParcel(parcel)
                 parcel.recycle()
                 info = "Items count: ${restored.items.size}, meta[source]=${restored.meta["source"]}"
             }) {

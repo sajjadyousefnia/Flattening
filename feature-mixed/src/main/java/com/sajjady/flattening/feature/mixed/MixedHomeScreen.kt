@@ -1,6 +1,7 @@
 package com.sajjady.flattening.feature.mixed
 
 import android.os.Parcel
+import android.os.Parcelable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -83,7 +84,7 @@ private fun runHybridBenchmark(): String {
         val parcel = Parcel.obtain()
         user.writeToParcel(parcel, 0)
         parcel.setDataPosition(0)
-        HybridUser.CREATOR.createFromParcel(parcel)
+        parcelableCreator<HybridUser>().createFromParcel(parcel)
         parcel.recycle()
     }
     val t3 = (System.nanoTime() - start3) / 1_000_000
@@ -93,6 +94,12 @@ private fun runHybridBenchmark(): String {
         appendLine("java.io.Serializable: ${t2} ms")
         appendLine("Parcelable (Parcel): ${t3} ms")
     }
+}
+
+@Suppress("UNCHECKED_CAST")
+private inline fun <reified T : Parcelable> parcelableCreator(): Parcelable.Creator<T> {
+    val field = T::class.java.getDeclaredField("CREATOR")
+    return field.get(null) as Parcelable.Creator<T>
 }
 
 @Composable
