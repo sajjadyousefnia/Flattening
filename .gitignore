@@ -1,0 +1,55 @@
+## Comprehensive Android / Kotlin / Gradle .gitignore
+
+# IDE
+*.iml
+.idea/
+.DS_Store
+
+# Gradle
+.gradle/
+**/build/
+build/
+
+# Local configuration (should not be committed)
+local.properties
+keystore.properties
+signing.properties
+*.keystore
+*.jks
+
+# Android build outputs
+*.apk
+*.ap_
+*.aab
+*.aar
+*.dex
+*.class
+
+# Android Studio specific
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Kotlin/Java common
+bin/
+gen/
+out/
+
+# OS-specific files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editors / Tools
+.vscode/
+
+# Logs / temp
+*.log
+*.hprof
+*.swp
+*.swo
+*~
+
+# Keep Gradle wrapper tracked
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
