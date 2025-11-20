@@ -2,12 +2,16 @@ package com.sajjady.flattening.feature.mixed
 
 import android.os.Parcel
 import android.os.Parcelable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,37 +20,48 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.sajjady.flattening.feature.mixed.model.HybridUser
-import kotlinx.serialization.encodeToString
+import com.sajjady.flattening.feature.mixed.model.JavaHybridUser
+import com.sajjady.flattening.feature.mixed.navigation.MixedTopics
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.*
 
 @Composable
-fun MixedHomeScreen() {
-    Column(Modifier.padding(16.dp)) {
+fun MixedHomeScreen(navController: NavController) {
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
         Text("Mixed / Comparison Lab", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(16.dp))
-        HybridBenchmarkCard()
+        HybridBenchmarkCard(navController)
         Spacer(Modifier.height(16.dp))
-        DecisionGuideCard()
+        DecisionGuideCard(navController)
+        Spacer(Modifier.height(16.dp))
+        JavaHybridCard(navController)
     }
 }
 
 @Composable
-private fun HybridBenchmarkCard() {
+private fun HybridBenchmarkCard(navController: NavController) {
     var result by remember { mutableStateOf("") }
 
     Card(Modifier.padding(4.dp)) {
         Column(Modifier.padding(12.dp)) {
             Text("M2 – Hybrid Benchmark", style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(8.dp))
-            Button(onClick = {
-                result = runHybridBenchmark()
-            }) {
-                Text("Run benchmark")
-            }
+            ActionRow(
+                buttonLabel = "Run benchmark",
+                onRun = { result = runHybridBenchmark() },
+                onInfo = { navController.navigate(MixedTopics.BenchmarkInfo) },
+                onCode = { navController.navigate(MixedTopics.BenchmarkCode) }
+            )
             Spacer(Modifier.height(8.dp))
             Text(result)
         }
@@ -103,7 +118,7 @@ private inline fun <reified T : Parcelable> parcelableCreator(): Parcelable.Crea
 }
 
 @Composable
-private fun DecisionGuideCard() {
+private fun DecisionGuideCard(navController: NavController) {
     Card(Modifier.padding(4.dp)) {
         Column(Modifier.padding(12.dp)) {
             Text("M3 – Decision Guide", style = MaterialTheme.typography.titleMedium)
@@ -125,6 +140,66 @@ private fun DecisionGuideCard() {
                  • Only for legacy interop or when required by APIs
                 """.trimIndent()
             )
+            Spacer(Modifier.height(8.dp))
+            ActionRow(
+                buttonLabel = "More details",
+                onRun = {},
+                onInfo = { navController.navigate(MixedTopics.GuideInfo) },
+                onCode = { navController.navigate(MixedTopics.GuideCode) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun JavaHybridCard(navController: NavController) {
+    var message by remember { mutableStateOf("") }
+
+    Card(Modifier.padding(4.dp)) {
+        Column(Modifier.padding(12.dp)) {
+            Text("M4 – Java Hybrid (Parcelable + Serializable)", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(8.dp))
+            ActionRow(
+                buttonLabel = "Run Java flow",
+                onRun = {
+                    val user = JavaHybridUser(11L, "Hybrid Java", "hybrid@java.com")
+                    val parcel = Parcel.obtain()
+                    user.writeToParcel(parcel, 0)
+                    parcel.setDataPosition(0)
+                    val restored = JavaHybridUser.CREATOR.createFromParcel(parcel)
+                    parcel.recycle()
+
+                    val bos = ByteArrayOutputStream()
+                    ObjectOutputStream(bos).use { it.writeObject(restored) }
+                    val restoredAgain = ObjectInputStream(ByteArrayInputStream(bos.toByteArray())).use {
+                        it.readObject() as JavaHybridUser
+                    }
+                    message = "${restoredAgain.name} -> parcel + serial round-trip"
+                },
+                onInfo = { navController.navigate(MixedTopics.JavaInfo) },
+                onCode = { navController.navigate(MixedTopics.JavaCode) }
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(message)
+        }
+    }
+}
+
+@Composable
+private fun ActionRow(
+    buttonLabel: String,
+    onRun: () -> Unit,
+    onInfo: () -> Unit,
+    onCode: () -> Unit
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Button(onClick = onRun) { Text(buttonLabel) }
+        Spacer(Modifier.width(4.dp))
+        IconButton(onClick = onInfo) {
+            Icon(Icons.Outlined.Info, contentDescription = "اطلاعات بیشتر")
+        }
+        IconButton(onClick = onCode) {
+            Icon(Icons.Outlined.Code, contentDescription = "نمونه کد")
         }
     }
 }
