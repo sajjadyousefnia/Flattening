@@ -551,7 +551,7 @@ private fun codeSamplesFor(topic: String): List<CodeSample>? = when (topic) {
             """
             val parcelableTime = measureTimeMillis { writeParcelableMany(times, user) }
             val jsonTime = measureTimeMillis { json.encodeToString(user) }
-            log("P: $parcelableTime ms vs JSON: $jsonTime ms")
+            log("P: ${'$'}parcelableTime ms vs JSON: ${'$'}jsonTime ms")
             """
         )
     )
